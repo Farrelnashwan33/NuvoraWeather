@@ -120,30 +120,33 @@ class WeatherStore {
 						const lat = pos.coords.latitude;
 						const lon = pos.coords.longitude;
 						const payload = await fetchWeatherByLocation(lat, lon);
-						this.data = payload;
-						this.lastCity = {
-							name: payload.location.city,
-							country: payload.location.country,
-							lat: payload.location.latitude,
-							lon: payload.location.longitude
-						};
-						if (typeof localStorage !== 'undefined') {
-							localStorage.setItem('nuvora-last-city', JSON.stringify(this.lastCity));
+						if (payload) {
+							this.data = payload;
+							this.lastCity = {
+								name: payload.location.city,
+								country: payload.location.country,
+								lat: payload.location.latitude,
+								lon: payload.location.longitude
+							};
+							if (typeof localStorage !== 'undefined') {
+								localStorage.setItem('nuvora-last-city', JSON.stringify(this.lastCity));
+							}
+						} else {
+							await this.loadWeather(this.lastCity.lat, this.lastCity.lon, this.lastCity.name, this.lastCity.country);
 						}
 					} catch (e) {
-						this.error = 'Location detected, but weather retrieval failed.';
+						await this.loadWeather(this.lastCity.lat, this.lastCity.lon, this.lastCity.name, this.lastCity.country);
 					} finally {
 						this.loading = false;
 						resolve();
 					}
 				},
-				(geoErr) => {
-					console.warn('Geolocation denied or timed out:', geoErr);
-					// Fallback to last saved city or default Bandung
-					this.loadWeather(this.lastCity.lat, this.lastCity.lon, this.lastCity.name, this.lastCity.country);
+				async (geoErr) => {
+					console.warn('Geolocation denied or timed out, loading default city:', geoErr);
+					await this.loadWeather(this.lastCity.lat, this.lastCity.lon, this.lastCity.name, this.lastCity.country);
 					resolve();
 				},
-				{ timeout: 8000, enableHighAccuracy: false }
+				{ timeout: 5000, enableHighAccuracy: false }
 			);
 		});
 	}

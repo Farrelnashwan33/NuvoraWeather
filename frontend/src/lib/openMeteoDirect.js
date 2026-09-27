@@ -518,8 +518,52 @@ export function fetchIndonesiaRegionsDirect() {
 	return CURATED_INDONESIA_REGIONS;
 }
 
-export function fetchFeaturedCitiesDirect() {
-	return DEFAULT_FEATURED_CITIES;
+export async function fetchFeaturedCitiesDirect() {
+	try {
+		const lats = DEFAULT_FEATURED_CITIES.map((c) => c.latitude).join(',');
+		const lons = DEFAULT_FEATURED_CITIES.map((c) => c.longitude).join(',');
+
+		const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&current=temperature_2m,weather_code,is_day,relative_humidity_2m,wind_speed_10m&timezone=auto`);
+
+		if (res.ok) {
+			const data = await res.json();
+			const resultsArray = Array.isArray(data) ? data : [data];
+
+			return DEFAULT_FEATURED_CITIES.map((city, idx) => {
+				const item = resultsArray[idx]?.current;
+				if (!item) {
+					return { ...city, temperature: null, condition: null, icon: 'sun' };
+				}
+
+				const isDay = Boolean(item.is_day ?? 1);
+				const wmo = Number(item.weather_code ?? 0);
+				const wInfo = interpretWmoCode(wmo, isDay);
+
+				return {
+					id: `city_${idx}`,
+					city_name: city.city_name,
+					country: city.country,
+					latitude: city.latitude,
+					longitude: city.longitude,
+					temperature: Math.round(Number(item.temperature_2m ?? 0)),
+					condition: wInfo.condition,
+					icon: wInfo.icon,
+					humidity: Number(item.relative_humidity_2m ?? 0),
+					wind_speed: Number(Number(item.wind_speed_10m ?? 0).toFixed(1)),
+					is_day: isDay
+				};
+			});
+		}
+	} catch (e) {
+		console.warn('Batch fetch featured cities error:', e);
+	}
+
+	return DEFAULT_FEATURED_CITIES.map((c) => ({
+		...c,
+		temperature: 26,
+		condition: 'Partly Cloudy',
+		icon: 'cloud-sun'
+	}));
 }
 
 export async function fetchLatestEarthquakeDirect(userLat = null, userLon = null) {
