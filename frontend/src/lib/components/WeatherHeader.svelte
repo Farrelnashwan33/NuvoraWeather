@@ -123,15 +123,15 @@
 		</nav>
 
 		<!-- Right Controls (Search bar trigger, Unit toggle, Theme toggle, Admin) -->
-		<div class="flex items-center gap-2 sm:gap-3">
+		<div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
 			<!-- Search Button Trigger -->
 			<button
 				onclick={onSearchClick}
-				class="flex items-center gap-2.5 px-3.5 py-2 rounded-2xl glass-panel text-slate-300 hover:text-white hover:border-cyan-500/40 transition duration-200 text-xs shadow-sm group"
+				class="flex items-center gap-2 p-2 sm:px-3.5 sm:py-2 rounded-2xl glass-panel text-slate-300 hover:text-white hover:border-cyan-500/40 transition duration-200 text-xs shadow-sm group"
 				aria-label="Search City"
 			>
-				<Search class="w-4 h-4 text-cyan-400 group-hover:scale-110 transition duration-200" />
-				<span class="hidden sm:inline font-medium">
+				<Search class="w-4 h-4 text-cyan-400 group-hover:scale-110 transition duration-200 shrink-0" />
+				<span class="hidden md:inline font-medium truncate max-w-[140px]">
 					{weatherStore.data ? `${weatherStore.data.location.city}, ${weatherStore.data.location.country}` : 'Search City...'}
 				</span>
 				<kbd class="hidden lg:inline-block px-1.5 py-0.5 text-[10px] font-mono bg-white/10 rounded text-slate-400">⌘K</kbd>
@@ -141,25 +141,25 @@
 			<button
 				onclick={() => weatherStore.detectLocation()}
 				title="Detect My Location"
-				class="p-2.5 rounded-2xl glass-panel text-slate-300 hover:text-cyan-400 hover:border-cyan-500/40 transition duration-200"
+				class="p-2 sm:p-2.5 rounded-2xl glass-panel text-slate-300 hover:text-cyan-400 hover:border-cyan-500/40 transition duration-200"
 				aria-label="Current Location"
 			>
 				<Compass class="w-4 h-4 text-cyan-400" />
 			</button>
 
-			<!-- Temperature Unit Toggle (°C / °F) -->
+			<!-- Temperature Unit Toggle (°C / °F) (Hidden on mobile, accessible in Menu drawer) -->
 			<button
 				onclick={() => weatherStore.toggleUnit()}
-				class="px-2.5 py-1.5 rounded-2xl glass-panel text-xs font-mono font-bold text-cyan-300 hover:text-white hover:border-cyan-500/40 transition duration-200"
+				class="hidden sm:flex px-2.5 py-1.5 rounded-2xl glass-panel text-xs font-mono font-bold text-cyan-300 hover:text-white hover:border-cyan-500/40 transition duration-200"
 				title="Toggle Celsius / Fahrenheit"
 			>
 				°{weatherStore.unit}
 			</button>
 
-			<!-- Dark / Light Theme Toggle -->
+			<!-- Dark / Light Theme Toggle (Hidden on mobile, accessible in Menu drawer) -->
 			<button
 				onclick={() => weatherStore.toggleTheme()}
-				class="p-2.5 rounded-2xl glass-panel text-slate-300 hover:text-amber-400 hover:border-cyan-500/40 transition duration-200"
+				class="hidden sm:flex p-2.5 rounded-2xl glass-panel text-slate-300 hover:text-amber-400 hover:border-cyan-500/40 transition duration-200"
 				title="Toggle Theme"
 			>
 				{#if weatherStore.theme === 'dark'}
@@ -169,10 +169,10 @@
 				{/if}
 			</button>
 
-			<!-- World Language Selector Trigger -->
+			<!-- World Language Selector Trigger (Hidden on mobile, accessible in Menu drawer) -->
 			<button
 				onclick={() => languageModalOpen = true}
-				class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-2xl glass-panel text-xs text-slate-300 hover:text-cyan-300 hover:border-cyan-500/40 transition duration-200 shadow-sm"
+				class="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-2xl glass-panel text-xs text-slate-300 hover:text-cyan-300 hover:border-cyan-500/40 transition duration-200 shadow-sm"
 				title={i18n.t('select_language', 'Pilih Bahasa Dunia')}
 				aria-label="Select World Language"
 			>
@@ -184,7 +184,7 @@
 			<!-- Admin Dashboard Link -->
 			<a
 				href="/admin/dashboard"
-				class="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-cyan-950/40 hover:bg-cyan-900/50 border border-cyan-500/30 text-cyan-300 hover:text-cyan-100 transition duration-200 text-xs font-medium"
+				class="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-cyan-950/40 hover:bg-cyan-900/50 border border-cyan-500/30 text-cyan-300 hover:text-cyan-100 transition duration-200 text-xs font-medium"
 				title="Admin Control Room"
 			>
 				<Shield class="w-3.5 h-3.5 text-cyan-400" />

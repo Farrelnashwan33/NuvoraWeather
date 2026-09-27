@@ -293,10 +293,10 @@
 	</div>
 
 	<!-- Search Bar & Region Selector Row (Sticky on Mobile) -->
-	<div class="sticky top-2 z-30 space-y-3 bg-slate-950/80 backdrop-blur-xl p-3 -mx-3 sm:mx-0 rounded-2xl sm:rounded-3xl border border-white/10 shadow-2xl">
+	<div class="sticky top-2 z-30 space-y-3 bg-slate-950/80 backdrop-blur-xl p-3 sm:p-4 rounded-2xl sm:rounded-3xl border border-white/10 shadow-2xl w-full max-w-full">
 		<div class="flex flex-col sm:flex-row gap-2.5">
 			<!-- Search Input -->
-			<div class="relative flex-1">
+			<div class="relative flex-1 min-w-0">
 				<Search class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
 				<input
 					type="text"
@@ -313,7 +313,7 @@
 			</div>
 
 			<!-- Region Selector Pills (Horizontal Scroll) -->
-			<div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none shrink-0">
+			<div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none shrink-0 max-w-full">
 				{#each REGIONS as reg}
 					<button
 						onclick={() => handleRegionSelect(reg.id)}
