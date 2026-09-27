@@ -1,0 +1,9 @@
+{
+  "name": "nuvora-weather",
+  "private": true,
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build",
+    "deploy": "cd frontend && npx wrangler deploy",
+    "dev": "cd frontend && npm run dev"
+  }
+}

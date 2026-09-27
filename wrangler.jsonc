@@ -1,0 +1,16 @@
+{
+	"$schema": "frontend/node_modules/wrangler/config-schema.json",
+	"name": "nuvoraweather",
+	"main": "frontend/.svelte-kit/cloudflare/_worker.js",
+	"compatibility_date": "2026-09-25",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"assets": {
+		"binding": "ASSETS",
+		"directory": "frontend/.svelte-kit/cloudflare"
+	},
+	"observability": {
+		"enabled": true
+	}
+}
