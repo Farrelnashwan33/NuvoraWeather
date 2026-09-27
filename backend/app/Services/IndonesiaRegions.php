@@ -1,0 +1,473 @@
+<?php
+
+namespace App\Services;
+
+class IndonesiaRegions
+{
+    /**
+     * Curated list of Outermost Islands, Remote Regions (Daerah 3T),
+     * Regencies, Districts, and Mountainous regions in Indonesia.
+     */
+    public static function getRemoteRegions(): array
+    {
+        return [
+            // --- Kepulauan Terluar & Perbatasan (Outermost / Border Islands) ---
+            [
+                'name' => 'Pulau Miangas',
+                'admin1' => 'Kec. Miangas, Kab. Kepulauan Talaud',
+                'province' => 'Sulawesi Utara',
+                'latitude' => 5.55589,
+                'longitude' => 126.58288,
+                'type' => 'Pulau Terluar Utara',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Pulau Rote (Nembrala)',
+                'admin1' => 'Kab. Rote Ndao',
+                'province' => 'Nusa Tenggara Timur',
+                'latitude' => -10.7414,
+                'longitude' => 123.0603,
+                'type' => 'Pulau Terluar Selatan',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Pulau Sabang (Weh)',
+                'admin1' => 'Kota Sabang',
+                'province' => 'Aceh',
+                'latitude' => 5.8925,
+                'longitude' => 95.3188,
+                'type' => 'Titik Nol Kilometer Barat',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Merauke (Sota)',
+                'admin1' => 'Distrik Sota, Kab. Merauke',
+                'province' => 'Papua Selatan',
+                'latitude' => -8.4991,
+                'longitude' => 140.4011,
+                'type' => 'Perbatasan Timur Indonesia - PNG',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Pulau Natuna (Ranai)',
+                'admin1' => 'Kab. Natuna',
+                'province' => 'Kepulauan Riau',
+                'latitude' => 3.9467,
+                'longitude' => 108.3847,
+                'type' => 'Laut Natuna Utara',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Kepulauan Anambas (Tarempa)',
+                'admin1' => 'Kab. Kepulauan Anambas',
+                'province' => 'Kepulauan Riau',
+                'latitude' => 3.2208,
+                'longitude' => 106.2425,
+                'type' => 'Kepulauan Perbatasan',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Pulau Sebatik',
+                'admin1' => 'Kab. Nunukan',
+                'province' => 'Kalimantan Utara',
+                'latitude' => 4.1611,
+                'longitude' => 117.7689,
+                'type' => 'Perbatasan Darat & Laut RI-Malaysia',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Krayan',
+                'admin1' => 'Kec. Krayan, Kab. Nunukan',
+                'province' => 'Kalimantan Utara',
+                'latitude' => 3.9167,
+                'longitude' => 115.7500,
+                'type' => 'Dataran Tinggi Terisolir Perbatasan',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Pulau Simeulue (Sinabang)',
+                'admin1' => 'Kab. Simeulue',
+                'province' => 'Aceh',
+                'latitude' => 2.6167,
+                'longitude' => 96.0833,
+                'type' => 'Pulau Samudra Hindia',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Kepulauan Mentawai (Tuapejat / Siberut)',
+                'admin1' => 'Kab. Kepulauan Mentawai',
+                'province' => 'Sumatera Barat',
+                'latitude' => -2.0167,
+                'longitude' => 99.6000,
+                'type' => 'Kepulauan Samudra Hindia',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Pulau Nias (Gunungsitoli)',
+                'admin1' => 'Kota Gunungsitoli',
+                'province' => 'Sumatera Utara',
+                'latitude' => 1.2894,
+                'longitude' => 97.6144,
+                'type' => 'Kepulauan Barat Sumatera',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Pulau Enggano',
+                'admin1' => 'Kec. Enggano, Kab. Bengkulu Utara',
+                'province' => 'Bengkulu',
+                'latitude' => -5.3833,
+                'longitude' => 102.2500,
+                'type' => 'Pulau Terluar Samudra Hindia',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Pulau Bawean (Sangkapura)',
+                'admin1' => 'Kab. Gresik',
+                'province' => 'Jawa Timur',
+                'latitude' => -5.8450,
+                'longitude' => 112.6483,
+                'type' => 'Laut Jawa',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Kepulauan Kangean (Arjasa)',
+                'admin1' => 'Kab. Sumenep',
+                'province' => 'Jawa Timur',
+                'latitude' => -6.8667,
+                'longitude' => 115.3167,
+                'type' => 'Laut Jawa Timur',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Kepulauan Karimunjawa',
+                'admin1' => 'Kec. Karimunjawa, Kab. Jepara',
+                'province' => 'Jawa Tengah',
+                'latitude' => -5.8464,
+                'longitude' => 110.4286,
+                'type' => 'Kepulauan Laut Jawa',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Kepulauan Selayar (Benteng)',
+                'admin1' => 'Kab. Kepulauan Selayar',
+                'province' => 'Sulawesi Selatan',
+                'latitude' => -6.1167,
+                'longitude' => 120.4500,
+                'type' => 'Laut Flores',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Pulau Sabu (Sabu Raijua)',
+                'admin1' => 'Kab. Sabu Raijua',
+                'province' => 'Nusa Tenggara Timur',
+                'latitude' => -10.5167,
+                'longitude' => 121.8333,
+                'type' => 'Laut Sawu',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Pulau Alor (Kalabahi)',
+                'admin1' => 'Kab. Alor',
+                'province' => 'Nusa Tenggara Timur',
+                'latitude' => -8.2167,
+                'longitude' => 124.5167,
+                'type' => 'Perbatasan NTT-Timor Leste',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Pulau Sumba (Waingapu / Waikabubak)',
+                'admin1' => 'Kab. Sumba Timur',
+                'province' => 'Nusa Tenggara Timur',
+                'latitude' => -9.6500,
+                'longitude' => 120.2667,
+                'type' => 'Nusa Tenggara Timur',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Kepulauan Talaud (Melonguane)',
+                'admin1' => 'Kab. Kepulauan Talaud',
+                'province' => 'Sulawesi Utara',
+                'latitude' => 4.0000,
+                'longitude' => 126.7000,
+                'type' => 'Perbatasan Utara Filipina',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Kepulauan Sangihe (Tahuna)',
+                'admin1' => 'Kab. Kepulauan Sangihe',
+                'province' => 'Sulawesi Utara',
+                'latitude' => 3.6061,
+                'longitude' => 125.4858,
+                'type' => 'Laut Sulawesi',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Kepulauan Siau Tagulandang Biaro (Sitaro)',
+                'admin1' => 'Kab. Kepulauan Sitaro (Ondong)',
+                'province' => 'Sulawesi Utara',
+                'latitude' => 2.7333,
+                'longitude' => 125.3833,
+                'type' => 'Kepulauan Vulkanik Utara',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Kepulauan Wakatobi (Wangi-Wangi)',
+                'admin1' => 'Kab. Wakatobi',
+                'province' => 'Sulawesi Tenggara',
+                'latitude' => -5.3333,
+                'longitude' => 123.5833,
+                'type' => 'Taman Nasional Laut Wakatobi',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Kepulauan Morotai (Daruba)',
+                'admin1' => 'Kab. Pulau Morotai',
+                'province' => 'Maluku Utara',
+                'latitude' => 2.3333,
+                'longitude' => 128.4167,
+                'type' => 'Pulau Pasifik Terluar',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Kepulauan Banda (Banda Neira)',
+                'admin1' => 'Kec. Banda, Kab. Maluku Tengah',
+                'province' => 'Maluku',
+                'latitude' => -4.5267,
+                'longitude' => 129.9042,
+                'type' => 'Kepulauan Rempah Bersejarah',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Kepulauan Aru (Dobo)',
+                'admin1' => 'Kab. Kepulauan Aru',
+                'province' => 'Maluku',
+                'latitude' => -5.7667,
+                'longitude' => 134.2167,
+                'type' => 'Laut Arafura',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Kepulauan Tanimbar (Saumlaki)',
+                'admin1' => 'Kab. Kepulauan Tanimbar',
+                'province' => 'Maluku',
+                'latitude' => -7.9833,
+                'longitude' => 131.3000,
+                'type' => 'Perbatasan Australia / Arafura',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Raja Ampat (Waisai / Misool)',
+                'admin1' => 'Kab. Raja Ampat',
+                'province' => 'Papua Barat Daya',
+                'latitude' => -0.4333,
+                'longitude' => 130.8167,
+                'type' => 'Kepulauan Karang Dunia',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Asmat (Agats)',
+                'admin1' => 'Kab. Asmat',
+                'province' => 'Papua Selatan',
+                'latitude' => -5.5392,
+                'longitude' => 138.1394,
+                'type' => 'Pesisir Rawa Papua Selatan',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Wamena (Lembah Baliem)',
+                'admin1' => 'Kab. Jayawijaya',
+                'province' => 'Papua Pegunungan',
+                'latitude' => -4.0833,
+                'longitude' => 138.9500,
+                'type' => 'Dataran Tinggi Pegunungan Tengah Papua',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Puncak Jaya (Mulia)',
+                'admin1' => 'Kab. Puncak Jaya',
+                'province' => 'Papua Tengah',
+                'latitude' => -3.7333,
+                'longitude' => 137.9667,
+                'type' => 'Pegunungan Salju Tropis',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Pegunungan Bintang (Oksibil)',
+                'admin1' => 'Kab. Pegunungan Bintang',
+                'province' => 'Papua Pegunungan',
+                'latitude' => -4.9000,
+                'longitude' => 140.6333,
+                'type' => 'Perbatasan Pegunungan RI-PNG',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Yahukimo (Dekai)',
+                'admin1' => 'Kab. Yahukimo',
+                'province' => 'Papua Pegunungan',
+                'latitude' => -4.8667,
+                'longitude' => 139.4833,
+                'type' => 'Papua Pegunungan',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Boven Digoel (Tanah Merah)',
+                'admin1' => 'Kab. Boven Digoel',
+                'province' => 'Papua Selatan',
+                'latitude' => -6.1000,
+                'longitude' => 140.3000,
+                'type' => 'Pedalaman Hutan Papua',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Mappi (Kepi)',
+                'admin1' => 'Kab. Mappi',
+                'province' => 'Papua Selatan',
+                'latitude' => -6.5333,
+                'longitude' => 139.3167,
+                'type' => 'Papua Selatan',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Mahakam Ulu (Ujoh Bilang)',
+                'admin1' => 'Kab. Mahakam Ulu',
+                'province' => 'Kalimantan Timur',
+                'latitude' => 0.5833,
+                'longitude' => 115.3000,
+                'type' => 'Hulu Sungai Mahakam Terpencil',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Kapuas Hulu (Putussibau)',
+                'admin1' => 'Kab. Kapuas Hulu',
+                'province' => 'Kalimantan Barat',
+                'latitude' => 0.8500,
+                'longitude' => 112.9167,
+                'type' => 'Hulu Kapuas Jantung Borneo',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Berau (Kepulauan Derawan & Maratua)',
+                'admin1' => 'Kab. Berau',
+                'province' => 'Kalimantan Timur',
+                'latitude' => 2.1667,
+                'longitude' => 117.4833,
+                'type' => 'Kepulauan Terluar Selat Makassar',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Malinau',
+                'admin1' => 'Kab. Malinau',
+                'province' => 'Kalimantan Utara',
+                'latitude' => 3.5833,
+                'longitude' => 116.6333,
+                'type' => 'Pedalaman Hutan Lindung Kayan Mentarang',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Pulau Biak',
+                'admin1' => 'Kab. Biak Numfor',
+                'province' => 'Papua',
+                'latitude' => -1.1833,
+                'longitude' => 136.0833,
+                'type' => 'Teluk Cenderawasih',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Pulau Yapen (Serui)',
+                'admin1' => 'Kab. Kepulauan Yapen',
+                'province' => 'Papua',
+                'latitude' => -1.8833,
+                'longitude' => 136.2333,
+                'type' => 'Teluk Cenderawasih',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Fakfak',
+                'admin1' => 'Kab. Fakfak',
+                'province' => 'Papua Barat',
+                'latitude' => -2.9258,
+                'longitude' => 132.2961,
+                'type' => 'Pesisir Pala Papua',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Kaimana (Teluk Triton)',
+                'admin1' => 'Kab. Kaimana',
+                'province' => 'Papua Barat',
+                'latitude' => -3.6583,
+                'longitude' => 133.7719,
+                'type' => 'Papua Barat',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Labuan Bajo (Komodo)',
+                'admin1' => 'Kab. Manggarai Barat',
+                'province' => 'Nusa Tenggara Timur',
+                'latitude' => -8.4964,
+                'longitude' => 119.8877,
+                'type' => 'Taman Nasional Komodo',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Dieng (Kawah Sikidang)',
+                'admin1' => 'Kab. Banjarnegara & Wonosobo',
+                'province' => 'Jawa Tengah',
+                'latitude' => -7.2044,
+                'longitude' => 109.9078,
+                'type' => 'Dataran Tinggi Dieng',
+                'flag' => '🇮🇩',
+            ],
+            [
+                'name' => 'Bromo Semeru (Tengger)',
+                'admin1' => 'Kab. Probolinggo & Pasuruan',
+                'province' => 'Jawa Timur',
+                'latitude' => -7.9425,
+                'longitude' => 112.9531,
+                'type' => 'Kawasan Gunung Bromo',
+                'flag' => '🇮🇩',
+            ],
+        ];
+    }
+
+    /**
+     * Search local curated Indonesian database
+     */
+    public static function search(string $query): array
+    {
+        $q = strtolower(trim($query));
+        if (strlen($q) < 2) return [];
+
+        $results = [];
+        $regions = self::getRemoteRegions();
+
+        foreach ($regions as $r) {
+            $name = strtolower($r['name']);
+            $admin = strtolower($r['admin1']);
+            $province = strtolower($r['province']);
+            $type = strtolower($r['type'] ?? '');
+
+            if (
+                str_contains($name, $q) ||
+                str_contains($admin, $q) ||
+                str_contains($province, $q) ||
+                str_contains($type, $q)
+            ) {
+                $results[] = [
+                    'id' => 'id_' . md5($r['name'] . $r['latitude']),
+                    'name' => $r['name'],
+                    'country' => 'Indonesia',
+                    'country_code' => 'ID',
+                    'flag' => '🇮🇩',
+                    'admin1' => $r['admin1'] . ', ' . $r['province'],
+                    'province' => $r['province'],
+                    'badge' => $r['type'] ?? 'Wilayah Indonesia',
+                    'latitude' => (float) $r['latitude'],
+                    'longitude' => (float) $r['longitude'],
+                    'timezone' => 'Asia/Jakarta',
+                ];
+            }
+        }
+
+        return $results;
+    }
+}
