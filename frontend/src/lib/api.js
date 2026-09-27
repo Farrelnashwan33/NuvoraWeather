@@ -2,12 +2,24 @@
  * Nuvora Weather API Client
  */
 
+import {
+	fetchWeatherDirect,
+	fetchWeatherByLocationDirect,
+	searchCitiesDirect,
+	fetchIndonesiaRegionsDirect,
+	fetchFeaturedCitiesDirect,
+	fetchLatestEarthquakeDirect,
+	fetchEarthquakesDirect,
+	fetchFloodStationsDirect,
+	fetchDisasterStatusDirect
+} from './openMeteoDirect.js';
+
 const API_BASE = import.meta.env.PUBLIC_API_URL || 'http://localhost:8000/api';
 
 /**
  * Helper to fetch with timeout and error handling
  */
-async function fetchWithTimeout(url, options = {}, timeoutMs = 8000) {
+async function fetchWithTimeout(url, options = {}, timeoutMs = 4000) {
 	const controller = new AbortController();
 	const id = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -30,67 +42,92 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 8000) {
 }
 
 export async function fetchWeather(lat, lon, cityName = null, country = null) {
-	const params = new URLSearchParams();
-	if (lat !== undefined && lat !== null) params.append('lat', lat);
-	if (lon !== undefined && lon !== null) params.append('lon', lon);
-	if (cityName) params.append('city', cityName);
-	if (country) params.append('country', country);
+	try {
+		const params = new URLSearchParams();
+		if (lat !== undefined && lat !== null) params.append('lat', lat);
+		if (lon !== undefined && lon !== null) params.append('lon', lon);
+		if (cityName) params.append('city', cityName);
+		if (country) params.append('country', country);
 
-	const url = `${API_BASE}/weather/current?${params.toString()}`;
-	const res = await fetchWithTimeout(url);
+		const url = `${API_BASE}/weather/current?${params.toString()}`;
+		const res = await fetchWithTimeout(url);
 
-	if (!res.ok) {
-		const errJson = await res.json().catch(() => ({}));
-		throw new Error(errJson.message || `API Error (${res.status})`);
+		if (res.ok) {
+			const json = await res.json();
+			if (json && json.data) return json.data;
+		}
+	} catch (err) {
+		console.warn('Backend API unavailable, falling back to direct Open-Meteo API:', err.message);
 	}
 
-	const json = await res.json();
-	return json.data;
+	// Fallback to direct client-side Open-Meteo API
+	return fetchWeatherDirect(lat, lon, cityName, country);
 }
 
 export async function fetchWeatherByLocation(lat, lon) {
-	const url = `${API_BASE}/weather/location?latitude=${lat}&longitude=${lon}`;
-	const res = await fetchWithTimeout(url);
+	try {
+		const url = `${API_BASE}/weather/location?latitude=${lat}&longitude=${lon}`;
+		const res = await fetchWithTimeout(url);
 
-	if (!res.ok) {
-		const errJson = await res.json().catch(() => ({}));
-		throw new Error(errJson.message || `Location Error (${res.status})`);
+		if (res.ok) {
+			const json = await res.json();
+			if (json && json.data) return json.data;
+		}
+	} catch (err) {
+		console.warn('Backend location API unavailable, falling back to direct location provider:', err.message);
 	}
 
-	const json = await res.json();
-	return json.data;
+	return fetchWeatherByLocationDirect(lat, lon);
 }
 
 export async function searchCities(query) {
 	if (!query || query.trim().length < 2) return [];
 
-	const url = `${API_BASE}/weather/search?q=${encodeURIComponent(query.trim())}`;
-	const res = await fetchWithTimeout(url, {}, 6000);
+	try {
+		const url = `${API_BASE}/weather/search?q=${encodeURIComponent(query.trim())}`;
+		const res = await fetchWithTimeout(url, {}, 3500);
 
-	if (!res.ok) return [];
+		if (res.ok) {
+			const json = await res.json();
+			if (json.results && json.results.length > 0) return json.results;
+		}
+	} catch (err) {
+		console.warn('Backend search API unavailable, using direct geocoding fallback');
+	}
 
-	const json = await res.json();
-	return json.results || [];
+	return searchCitiesDirect(query);
 }
 
 export async function fetchIndonesiaRegions() {
-	const url = `${API_BASE}/weather/indonesia-regions`;
-	const res = await fetchWithTimeout(url, {}, 5000);
+	try {
+		const url = `${API_BASE}/weather/indonesia-regions`;
+		const res = await fetchWithTimeout(url, {}, 3000);
 
-	if (!res.ok) return [];
+		if (res.ok) {
+			const json = await res.json();
+			if (json.regions && json.regions.length > 0) return json.regions;
+		}
+	} catch (err) {
+		// Silent fallback
+	}
 
-	const json = await res.json();
-	return json.regions || [];
+	return fetchIndonesiaRegionsDirect();
 }
 
 export async function fetchFeaturedCities() {
-	const url = `${API_BASE}/cities/featured`;
-	const res = await fetchWithTimeout(url, {}, 6000);
+	try {
+		const url = `${API_BASE}/cities/featured`;
+		const res = await fetchWithTimeout(url, {}, 3500);
 
-	if (!res.ok) return [];
+		if (res.ok) {
+			const json = await res.json();
+			if (json.data && json.data.length > 0) return json.data;
+		}
+	} catch (err) {
+		// Silent fallback
+	}
 
-	const json = await res.json();
-	return json.data || [];
+	return fetchFeaturedCitiesDirect();
 }
 
 /* =========================================================================
@@ -98,53 +135,81 @@ export async function fetchFeaturedCities() {
    ========================================================================= */
 
 export async function fetchLatestEarthquake(lat = null, lon = null) {
-	const params = new URLSearchParams();
-	if (lat !== null && lat !== undefined) params.append('lat', lat);
-	if (lon !== null && lon !== undefined) params.append('lon', lon);
+	try {
+		const params = new URLSearchParams();
+		if (lat !== null && lat !== undefined) params.append('lat', lat);
+		if (lon !== null && lon !== undefined) params.append('lon', lon);
 
-	const url = `${API_BASE}/disaster/earthquakes/latest?${params.toString()}`;
-	const res = await fetchWithTimeout(url, {}, 6000);
+		const url = `${API_BASE}/disaster/earthquakes/latest?${params.toString()}`;
+		const res = await fetchWithTimeout(url, {}, 3500);
 
-	if (!res.ok) throw new Error('Data gempa BMKG sementara tidak tersedia.');
-	const json = await res.json();
-	return json.data;
+		if (res.ok) {
+			const json = await res.json();
+			if (json.data) return json.data;
+		}
+	} catch (err) {
+		console.warn('Backend BMKG API unavailable, using direct BMKG fallback');
+	}
+
+	return fetchLatestEarthquakeDirect(lat, lon);
 }
 
 export async function fetchEarthquakes(lat = null, lon = null, filter = 'all') {
-	const params = new URLSearchParams();
-	if (lat !== null && lat !== undefined) params.append('lat', lat);
-	if (lon !== null && lon !== undefined) params.append('lon', lon);
-	if (filter && filter !== 'all') params.append('filter', filter);
+	try {
+		const params = new URLSearchParams();
+		if (lat !== null && lat !== undefined) params.append('lat', lat);
+		if (lon !== null && lon !== undefined) params.append('lon', lon);
+		if (filter && filter !== 'all') params.append('filter', filter);
 
-	const url = `${API_BASE}/disaster/earthquakes?${params.toString()}`;
-	const res = await fetchWithTimeout(url, {}, 8000);
+		const url = `${API_BASE}/disaster/earthquakes?${params.toString()}`;
+		const res = await fetchWithTimeout(url, {}, 4000);
 
-	if (!res.ok) return [];
-	const json = await res.json();
-	return json.data || [];
+		if (res.ok) {
+			const json = await res.json();
+			if (json.data) return json.data;
+		}
+	} catch (err) {
+		// Silent fallback
+	}
+
+	return fetchEarthquakesDirect(lat, lon, filter);
 }
 
 export async function fetchFloodStations(lat = null, lon = null, province = '') {
-	const params = new URLSearchParams();
-	if (lat !== null && lat !== undefined) params.append('lat', lat);
-	if (lon !== null && lon !== undefined) params.append('lon', lon);
-	if (province) params.append('province', province);
+	try {
+		const params = new URLSearchParams();
+		if (lat !== null && lat !== undefined) params.append('lat', lat);
+		if (lon !== null && lon !== undefined) params.append('lon', lon);
+		if (province) params.append('province', province);
 
-	const url = `${API_BASE}/disaster/floods?${params.toString()}`;
-	const res = await fetchWithTimeout(url, {}, 6000);
+		const url = `${API_BASE}/disaster/floods?${params.toString()}`;
+		const res = await fetchWithTimeout(url, {}, 3500);
 
-	if (!res.ok) return [];
-	const json = await res.json();
-	return json.data || [];
+		if (res.ok) {
+			const json = await res.json();
+			if (json.data) return json.data;
+		}
+	} catch (err) {
+		// Silent fallback
+	}
+
+	return fetchFloodStationsDirect(lat, lon, province);
 }
 
 export async function fetchDisasterStatus() {
-	const url = `${API_BASE}/disaster/status`;
-	const res = await fetchWithTimeout(url, {}, 6000);
+	try {
+		const url = `${API_BASE}/disaster/status`;
+		const res = await fetchWithTimeout(url, {}, 3000);
 
-	if (!res.ok) throw new Error('Failed to load disaster telemetry');
-	const json = await res.json();
-	return json;
+		if (res.ok) {
+			const json = await res.json();
+			return json;
+		}
+	} catch (err) {
+		// Silent fallback
+	}
+
+	return fetchDisasterStatusDirect();
 }
 
 /* =========================================================================
