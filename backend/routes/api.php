@@ -40,6 +40,39 @@ Route::prefix('disaster')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
+| Traffic Monitoring API Routes (Indonesia Roads, Congestion & Regions)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('traffic')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\TrafficController::class, 'index']);
+    Route::get('/search', [\App\Http\Controllers\Api\TrafficController::class, 'search']);
+    Route::get('/hierarchy', [\App\Http\Controllers\Api\TrafficController::class, 'hierarchy']);
+    Route::get('/area/{id}', [\App\Http\Controllers\Api\TrafficController::class, 'area']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| CCTV Traffic Monitoring API Routes (ATCS / Dishub Aggregator)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('cctv')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\CctvController::class, 'index']);
+    Route::get('/search', [\App\Http\Controllers\Api\CctvController::class, 'search']);
+    Route::get('/sources', [\App\Http\Controllers\Api\CctvController::class, 'sources']);
+    Route::get('/{id}', [\App\Http\Controllers\Api\CctvController::class, 'show']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Unified Indonesia Monitoring Hub Telemetry
+|--------------------------------------------------------------------------
+*/
+Route::prefix('monitoring')->group(function () {
+    Route::get('/overview', [\App\Http\Controllers\Api\MonitoringController::class, 'overview']);
+});
+
+/*
+|--------------------------------------------------------------------------
 | Admin Authentication Routes
 |--------------------------------------------------------------------------
 */

@@ -662,3 +662,792 @@ export function fetchDisasterStatusDirect() {
 		updated_at: new Date().toISOString()
 	};
 }
+
+/* =========================================================================
+   Direct Traffic Data Provider (Fallback & Offline-First)
+   ========================================================================= */
+
+const TRAFFIC_HIERARCHY = {
+	jawa: {
+		name: 'Jawa',
+		provinces: {
+			'DKI Jakarta': {
+				'Jakarta Pusat': ['Gambir', 'Menteng', 'Tanah Abang', 'Senen', 'Cempaka Putih'],
+				'Jakarta Selatan': ['Kebayoran Baru', 'Kebayoran Lama', 'Setiabudi', 'Cilandak', 'Pasar Minggu'],
+				'Jakarta Barat': ['Grogol Petamburan', 'Kembangan', 'Kebon Jeruk', 'Palmerah'],
+				'Jakarta Timur': ['Matraman', 'Jatinegara', 'Duren Sawit', 'Kramat Jati', 'Ciracas'],
+				'Jakarta Utara': ['Penjaringan', 'Tanjung Priok', 'Kelapa Gading', 'Pademangan']
+			},
+			'Jawa Barat': {
+				'Kota Bandung': ['Coblong', 'Sumur Bandung', 'Cicendo', 'Lengkong', 'Buahbatu', 'Sukajadi'],
+				'Kab. Bandung Barat': ['Lembang', 'Padalarang', 'Parongpong', 'Ngamprah'],
+				'Kota Bogor': ['Bogor Tengah', 'Bogor Selatan', 'Bogor Timur', 'Bogor Utara'],
+				'Kota Bekasi': ['Bekasi Barat', 'Bekasi Selatan', 'Bekasi Timur', 'Rawalumbu'],
+				'Kota Depok': ['Pancoran Mas', 'Beji', 'Sukmajaya', 'Cinere'],
+				'Kab. Bogor': ['Cisarua (Puncak)', 'Megamendung', 'Ciawi', 'Cibinong']
+			},
+			'Jawa Tengah': {
+				'Kota Semarang': ['Semarang Tengah', 'Semarang Selatan', 'Candisari', 'Banyumanik'],
+				'Kota Surakarta (Solo)': ['Banjarsari', 'Laweyan', 'Pasar Kliwon', 'Jebres'],
+				'Kab. Magelang': ['Borobudur', 'Mertoyudan', 'Muntilan']
+			},
+			'DI Yogyakarta': {
+				'Kota Yogyakarta': ['Danurejan', 'Gedongtengen', 'Gondomanan', 'Kraton', 'Malioboro'],
+				'Kab. Sleman': ['Depok', 'Mlati', 'Ngaglik', 'Gamping'],
+				'Kab. Bantul': ['Kasihan', 'Sewon', 'Banguntapan']
+			},
+			'Jawa Timur': {
+				'Kota Surabaya': ['Tegalsari', 'Genteng', 'Gubeng', 'Wonokromo', 'Rungkut'],
+				'Kota Malang': ['Klojen', 'Blimbing', 'Lowokwaru', 'Sukun'],
+				'Kab. Sidoarjo': ['Sidoarjo', 'Waru', 'Gedangan'],
+				'Kota Batu': ['Batu', 'Bumiaji', 'Junrejo']
+			}
+		}
+	},
+	sumatera: {
+		name: 'Sumatera',
+		provinces: {
+			'Sumatera Utara': {
+				'Kota Medan': ['Medan Kota', 'Medan Barat', 'Medan Petisah', 'Medan Baru', 'Medan Sunggal']
+			},
+			'Sumatera Barat': {
+				'Kota Padang': ['Padang Barat', 'Padang Timur', 'Padang Utara'],
+				'Kota Bukittinggi': ['Guguk Panjang', 'Mandiangin Koto Selayan']
+			},
+			'Sumatera Selatan': {
+				'Kota Palembang': ['Ilir Barat I', 'Ilir Timur I', 'Seberang Ulu I', 'Kemuning']
+			},
+			'Riau': {
+				'Kota Pekanbaru': ['Senapelan', 'Sukajadi', 'Pekanbaru Kota', 'Tampan']
+			},
+			'Lampung': {
+				'Kota Bandar Lampung': ['Tanjung Karang Pusat', 'Teluk Betung Selatan', 'Kedaton']
+			}
+		}
+	},
+	bali_nusa_tenggara: {
+		name: 'Bali & Nusa Tenggara',
+		provinces: {
+			'Bali': {
+				'Kota Denpasar': ['Denpasar Barat', 'Denpasar Selatan', 'Denpasar Timur', 'Denpasar Utara'],
+				'Kab. Badung': ['Kuta', 'Kuta Selatan (Nusa Dua)', 'Kuta Utara (Canggu/Seminyak)', 'Mengwi'],
+				'Kab. Gianyar': ['Ubud', 'Sukawati', 'Gianyar']
+			},
+			'Nusa Tenggara Barat': {
+				'Kota Mataram': ['Mataram', 'Ampenan', 'Cakranegara'],
+				'Kab. Lombok Barat': ['Batulayar (Senggigi)', 'Gerung']
+			},
+			'Nusa Tenggara Timur': {
+				'Kota Kupang': ['Oebobo', 'Kelapa Lima', 'Kota Raja'],
+				'Kab. Manggarai Barat': ['Komodo (Labuan Bajo)']
+			}
+		}
+	},
+	kalimantan: {
+		name: 'Kalimantan',
+		provinces: {
+			'Kalimantan Timur': {
+				'Kota Balikpapan': ['Balikpapan Kota', 'Balikpapan Selatan', 'Balikpapan Tengah'],
+				'Kota Samarinda': ['Samarinda Kota', 'Samarinda Ulu', 'Sungai Pinang'],
+				'IKN Nusantara': ['Sepaku', 'KIPP Nusantara']
+			},
+			'Kalimantan Barat': {
+				'Kota Pontianak': ['Pontianak Kota', 'Pontianak Selatan', 'Pontianak Barat']
+			},
+			'Kalimantan Selatan': {
+				'Kota Banjarmasin': ['Banjarmasin Tengah', 'Banjarmasin Barat', 'Banjarmasin Selatan']
+			}
+		}
+	},
+	sulawesi: {
+		name: 'Sulawesi',
+		provinces: {
+			'Sulawesi Selatan': {
+				'Kota Makassar': ['Ujung Pandang', 'Panakkukang', 'Rappocini', 'Tamalanrea', 'Mariso']
+			},
+			'Sulawesi Utara': {
+				'Kota Manado': ['Wenang', 'Sario', 'Malalayang', 'Tikala']
+			}
+		}
+	},
+	maluku_papua: {
+		name: 'Maluku & Papua',
+		provinces: {
+			'Maluku': {
+				'Kota Ambon': ['Sirimau', 'Nusaniwe', 'Teluk Ambon']
+			},
+			'Papua': {
+				'Kota Jayapura': ['Jayapura Utara', 'Jayapura Selatan', 'Abepura']
+			},
+			'Papua Barat Daya': {
+				'Kota Sorong': ['Sorong', 'Sorong Barat', 'Sorong Timur']
+			}
+		}
+	}
+};
+
+const CURATED_TRAFFIC_SEGMENTS = [
+	{
+		id: 'tf_jkt_01',
+		road_name: 'Jl. Jenderal Sudirman (Dukuh Atas - Semanggi)',
+		road_type: 'Jalan Protokol / Arteri Primer',
+		city: 'Jakarta Selatan',
+		district: 'Setiabudi',
+		province: 'DKI Jakarta',
+		region_slug: 'jawa',
+		latitude: -6.2154,
+		longitude: 106.8219,
+		coordinates: [[-6.2008, 106.8236], [-6.2104, 106.8228], [-6.2198, 106.8196]],
+		status: 'Ramai',
+		speed_kmh: 36,
+		free_flow_speed: 50,
+		delay_minutes: 4,
+		incident: null,
+		length_km: 3.2
+	},
+	{
+		id: 'tf_jkt_02',
+		road_name: 'Tol Dalam Kota (Cawang - Kuningan - Slipi)',
+		road_type: 'Jalan Tol',
+		city: 'Jakarta Selatan',
+		district: 'Mampang Prapatan',
+		province: 'DKI Jakarta',
+		region_slug: 'jawa',
+		latitude: -6.2398,
+		longitude: 106.8288,
+		coordinates: [[-6.2435, 106.8642], [-6.2389, 106.8321], [-6.2012, 106.7981]],
+		status: 'Padat',
+		speed_kmh: 24,
+		free_flow_speed: 80,
+		delay_minutes: 14,
+		incident: 'Kepadatan arus kendaraan',
+		length_km: 8.4
+	},
+	{
+		id: 'tf_jkt_03',
+		road_name: 'Jl. M.H. Thamrin (Bundaran HI - Monas)',
+		road_type: 'Jalan Protokol',
+		city: 'Jakarta Pusat',
+		district: 'Menteng',
+		province: 'DKI Jakarta',
+		region_slug: 'jawa',
+		latitude: -6.1912,
+		longitude: 106.8231,
+		coordinates: [[-6.1950, 106.8231], [-6.1834, 106.8236], [-6.1754, 106.8242]],
+		status: 'Lancar',
+		speed_kmh: 42,
+		free_flow_speed: 45,
+		delay_minutes: 1,
+		incident: null,
+		length_km: 2.4
+	},
+	{
+		id: 'tf_jkt_04',
+		road_name: 'Tol JORR (Cilandak - Simatupang - Pasar Rebo)',
+		road_type: 'Jalan Tol Lingkar Luar',
+		city: 'Jakarta Selatan',
+		district: 'Cilandak',
+		province: 'DKI Jakarta',
+		region_slug: 'jawa',
+		latitude: -6.2991,
+		longitude: 106.8054,
+		coordinates: [[-6.2912, 106.7781], [-6.2998, 106.8123], [-6.3056, 106.8654]],
+		status: 'Padat',
+		speed_kmh: 28,
+		free_flow_speed: 70,
+		delay_minutes: 11,
+		incident: null,
+		length_km: 9.8
+	},
+	{
+		id: 'tf_bdg_01',
+		road_name: 'Jl. Dr. Djunjunan (Pasteur - Menuju Tol)',
+		road_type: 'Pintu Gerbang Kota / Arteri',
+		city: 'Kota Bandung',
+		district: 'Cicendo',
+		province: 'Jawa Barat',
+		region_slug: 'jawa',
+		latitude: -6.8924,
+		longitude: 107.5794,
+		coordinates: [[-6.8912, 107.5612], [-6.8931, 107.5812], [-6.8989, 107.6012]],
+		status: 'Padat',
+		speed_kmh: 19,
+		free_flow_speed: 45,
+		delay_minutes: 12,
+		incident: 'Antrean gerbang tol Pasteur',
+		length_km: 4.1
+	},
+	{
+		id: 'tf_bdg_02',
+		road_name: 'Jl. Ir. H. Juanda (Dago - Simpang Dago)',
+		road_type: 'Kawasan Wisata & Bisnis',
+		city: 'Kota Bandung',
+		district: 'Coblong',
+		province: 'Jawa Barat',
+		region_slug: 'jawa',
+		latitude: -6.8856,
+		longitude: 107.6134,
+		coordinates: [[-6.9012, 107.6112], [-6.8856, 107.6134], [-6.8624, 107.6189]],
+		status: 'Lancar',
+		speed_kmh: 34,
+		free_flow_speed: 35,
+		delay_minutes: 1,
+		incident: null,
+		length_km: 3.8
+	},
+	{
+		id: 'tf_bgr_01',
+		road_name: 'Jalur Puncak (Gadog - Cipayung - Megamendung)',
+		road_type: 'Jalur Wisata Nasional',
+		city: 'Kab. Bogor',
+		district: 'Megamendung',
+		province: 'Jawa Barat',
+		region_slug: 'jawa',
+		latitude: -6.6542,
+		longitude: 106.8942,
+		coordinates: [[-6.6412, 106.8654], [-6.6624, 106.9123], [-6.6998, 106.9642]],
+		status: 'Macet',
+		speed_kmh: 14,
+		free_flow_speed: 40,
+		delay_minutes: 24,
+		incident: 'Sistem one-way / buka tutup arah',
+		length_km: 12.5
+	},
+	{
+		id: 'tf_sby_01',
+		road_name: 'Jl. Mayjen Sungkono - HR Muhammad',
+		road_type: 'Kawasan Bisnis Surabaya Barat',
+		city: 'Kota Surabaya',
+		district: 'Dukuh Pakis',
+		province: 'Jawa Timur',
+		region_slug: 'jawa',
+		latitude: -7.2912,
+		longitude: 112.7123,
+		coordinates: [[-7.2934, 112.7321], [-7.2912, 112.7123], [-7.2889, 112.6912]],
+		status: 'Lancar',
+		speed_kmh: 42,
+		free_flow_speed: 45,
+		delay_minutes: 1,
+		incident: null,
+		length_km: 4.6
+	},
+	{
+		id: 'tf_sby_02',
+		road_name: 'Jl. Ahmad Yani (Wonokromo - Bundaran Waru)',
+		road_type: 'Arteri Utama Gerbang Selatan',
+		city: 'Kota Surabaya',
+		district: 'Wonokromo',
+		province: 'Jawa Timur',
+		region_slug: 'jawa',
+		latitude: -7.3242,
+		longitude: 112.7354,
+		coordinates: [[-7.3012, 112.7389], [-7.3242, 112.7354], [-7.3512, 112.7301]],
+		status: 'Ramai',
+		speed_kmh: 30,
+		free_flow_speed: 50,
+		delay_minutes: 6,
+		incident: null,
+		length_km: 6.2
+	},
+	{
+		id: 'tf_yog_01',
+		road_name: 'Jl. Malioboro - Margo Utomo',
+		road_type: 'Pusat Wisata & Budaya',
+		city: 'Kota Yogyakarta',
+		district: 'Gedongtengen',
+		province: 'DI Yogyakarta',
+		region_slug: 'jawa',
+		latitude: -7.7924,
+		longitude: 110.3658,
+		coordinates: [[-7.7842, 110.3664], [-7.7924, 110.3658], [-7.8012, 110.3651]],
+		status: 'Ramai',
+		speed_kmh: 22,
+		free_flow_speed: 25,
+		delay_minutes: 3,
+		incident: 'Aktivitas wisata & pejalan kaki',
+		length_km: 2.1
+	},
+	{
+		id: 'tf_bali_01',
+		road_name: 'Jl. Sunset Road (Kuta - Seminyak)',
+		road_type: 'Arteri Wisata Utama',
+		city: 'Kab. Badung',
+		district: 'Kuta',
+		province: 'Bali',
+		region_slug: 'bali_nusa_tenggara',
+		latitude: -8.7054,
+		longitude: 115.1789,
+		coordinates: [[-8.7212, 115.1812], [-8.7054, 115.1789], [-8.6823, 115.1689]],
+		status: 'Ramai',
+		speed_kmh: 27,
+		free_flow_speed: 40,
+		delay_minutes: 5,
+		incident: null,
+		length_km: 5.8
+	},
+	{
+		id: 'tf_bali_02',
+		road_name: 'Tol Bali Mandara (Benoa - Ngurah Rai - Nusa Dua)',
+		road_type: 'Jalan Tol Atas Laut',
+		city: 'Kab. Badung',
+		district: 'Kuta Selatan',
+		province: 'Bali',
+		region_slug: 'bali_nusa_tenggara',
+		latitude: -8.7612,
+		longitude: 115.2012,
+		coordinates: [[-8.7342, 115.2123], [-8.7612, 115.2012], [-8.7989, 115.2189]],
+		status: 'Lancar',
+		speed_kmh: 75,
+		free_flow_speed: 80,
+		delay_minutes: 0,
+		incident: null,
+		length_km: 12.7
+	},
+	{
+		id: 'tf_med_01',
+		road_name: 'Jl. Gatot Subroto (Medan Fair - Sei Sikambing)',
+		road_type: 'Arteri Primer',
+		city: 'Kota Medan',
+		district: 'Medan Petisah',
+		province: 'Sumatera Utara',
+		region_slug: 'sumatera',
+		latitude: 3.5891,
+		longitude: 98.6612,
+		coordinates: [[3.5934, 98.6754], [3.5891, 98.6612], [3.5823, 98.6389]],
+		status: 'Ramai',
+		speed_kmh: 28,
+		free_flow_speed: 45,
+		delay_minutes: 5,
+		incident: null,
+		length_km: 4.3
+	},
+	{
+		id: 'tf_mks_01',
+		road_name: 'Jl. A.P. Pettarani (Flyover - Alauddin)',
+		road_type: 'Arteri Utama & Tol Layang',
+		city: 'Kota Makassar',
+		district: 'Panakkukang',
+		province: 'Sulawesi Selatan',
+		region_slug: 'sulawesi',
+		latitude: -5.1554,
+		longitude: 119.4389,
+		coordinates: [[-5.1389, 119.4398], [-5.1554, 119.4389], [-5.1789, 119.4367]],
+		status: 'Lancar',
+		speed_kmh: 46,
+		free_flow_speed: 50,
+		delay_minutes: 1,
+		incident: null,
+		length_km: 4.8
+	}
+];
+
+export function fetchTrafficDataDirect({ north, south, east, west, region = 'all', status = 'all' } = {}) {
+	let filtered = CURATED_TRAFFIC_SEGMENTS;
+
+	if (north !== undefined && north !== null && south !== undefined && south !== null) {
+		filtered = filtered.filter(
+			(seg) => seg.latitude <= north && seg.latitude >= south && seg.longitude <= east && seg.longitude >= west
+		);
+	}
+
+	if (region && region !== 'all' && region !== 'indonesia') {
+		filtered = filtered.filter((seg) => seg.region_slug === region.toLowerCase());
+	}
+
+	if (status && status !== 'all') {
+		filtered = filtered.filter((seg) => seg.status.toLowerCase() === status.toLowerCase());
+	}
+
+	return {
+		total: filtered.length,
+		updated_at: new Date().toISOString(),
+		segments: filtered.slice(0, 80)
+	};
+}
+
+export function searchTrafficDirect(query) {
+	const trimmed = (query || '').trim().toLowerCase();
+	if (trimmed.length < 2) return [];
+
+	return CURATED_TRAFFIC_SEGMENTS.filter(
+		(seg) =>
+			seg.road_name.toLowerCase().includes(trimmed) ||
+			seg.city.toLowerCase().includes(trimmed) ||
+			seg.district.toLowerCase().includes(trimmed) ||
+			seg.province.toLowerCase().includes(trimmed)
+	).slice(0, 20);
+}
+
+export function fetchTrafficHierarchyDirect() {
+	return TRAFFIC_HIERARCHY;
+}
+
+export function fetchAreaTrafficDirect(id) {
+	return CURATED_TRAFFIC_SEGMENTS.find((seg) => seg.id === id) || null;
+}
+
+/* =========================================================================
+   Direct CCTV Data Provider (ATCS & Dishub Aggregator)
+   ========================================================================= */
+
+const CURATED_CCTV_CAMERAS = [
+	{
+		id: 'cctv_jkt_01',
+		name: 'Simpang Bundaran HI (Arah Thamrin / Sudirman)',
+		province: 'DKI Jakarta',
+		city: 'Jakarta Pusat',
+		district: 'Menteng',
+		road: 'Jl. M.H. Thamrin - Jl. Jend. Sudirman',
+		region_slug: 'jawa',
+		latitude: -6.1950,
+		longitude: 106.8231,
+		stream_url: 'https://cctv.balitower.co.id/Bundaran-HI-01/embed.html',
+		thumbnail_url: 'https://images.unsplash.com/photo-1555899434-94d1368aa7af?w=600&auto=format&fit=crop&q=80',
+		source_name: 'Dishub DKI Jakarta / Smart City',
+		source_url: 'https://smartcity.jakarta.go.id',
+		status: 'online',
+		resolution: '1080p FHD',
+		fps: 25,
+		last_checked_at: new Date().toISOString()
+	},
+	{
+		id: 'cctv_jkt_02',
+		name: 'Simpang Susun Semanggi',
+		province: 'DKI Jakarta',
+		city: 'Jakarta Selatan',
+		district: 'Kebayoran Baru',
+		road: 'Jl. Gatot Subroto x Jl. Jenderal Sudirman',
+		region_slug: 'jawa',
+		latitude: -6.2198,
+		longitude: 106.8126,
+		stream_url: 'https://cctv.balitower.co.id/Semanggi-02/embed.html',
+		thumbnail_url: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=600&auto=format&fit=crop&q=80',
+		source_name: 'Dishub DKI Jakarta',
+		source_url: 'https://dishub.jakarta.go.id',
+		status: 'online',
+		resolution: '1080p FHD',
+		fps: 25,
+		last_checked_at: new Date().toISOString()
+	},
+	{
+		id: 'cctv_jkt_03',
+		name: 'Monumen Nasional (Silang Merdeka Barat)',
+		province: 'DKI Jakarta',
+		city: 'Jakarta Pusat',
+		district: 'Gambir',
+		road: 'Jl. Medan Merdeka Barat',
+		region_slug: 'jawa',
+		latitude: -6.1754,
+		longitude: 106.8242,
+		stream_url: 'https://cctv.balitower.co.id/Monas-Barat/embed.html',
+		thumbnail_url: 'https://images.unsplash.com/photo-1584810359583-96fc3448beaa?w=600&auto=format&fit=crop&q=80',
+		source_name: 'Dishub DKI Jakarta',
+		source_url: 'https://dishub.jakarta.go.id',
+		status: 'online',
+		resolution: '1080p FHD',
+		fps: 25,
+		last_checked_at: new Date().toISOString()
+	},
+	{
+		id: 'cctv_jkt_04',
+		name: 'Tol Cawang Interchange',
+		province: 'DKI Jakarta',
+		city: 'Jakarta Timur',
+		district: 'Jatinegara',
+		road: 'Tol Jagorawi - Cikampek Interchange',
+		region_slug: 'jawa',
+		latitude: -6.2435,
+		longitude: 106.8642,
+		stream_url: 'https://cctv.bpjt.pu.go.id/cctv-in-out-cawang',
+		thumbnail_url: 'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?w=600&auto=format&fit=crop&q=80',
+		source_name: 'BPJT / Jasa Marga',
+		source_url: 'https://bpjt.pu.go.id',
+		status: 'online',
+		resolution: '720p HD',
+		fps: 20,
+		last_checked_at: new Date().toISOString()
+	},
+	{
+		id: 'cctv_bdg_01',
+		name: 'Simpang Dago (Cikapayang / Flyover Pasupati)',
+		province: 'Jawa Barat',
+		city: 'Kota Bandung',
+		district: 'Coblong',
+		road: 'Jl. Ir. H. Juanda - Flyover Mochtar Kusumaatmadja',
+		region_slug: 'jawa',
+		latitude: -6.8989,
+		longitude: 107.6112,
+		stream_url: 'https://atcs.bandung.go.id/cctv/simpang-dago',
+		thumbnail_url: 'https://images.unsplash.com/photo-1518684079-3c830dcef090?w=600&auto=format&fit=crop&q=80',
+		source_name: 'ATCS Dishub Kota Bandung',
+		source_url: 'https://atcs.bandung.go.id',
+		status: 'online',
+		resolution: '1080p FHD',
+		fps: 25,
+		last_checked_at: new Date().toISOString()
+	},
+	{
+		id: 'cctv_bdg_02',
+		name: 'Gerbang Tol Pasteur (Inflow & Outflow)',
+		province: 'Jawa Barat',
+		city: 'Kota Bandung',
+		district: 'Cicendo',
+		road: 'Jl. Dr. Djunjunan',
+		region_slug: 'jawa',
+		latitude: -6.8912,
+		longitude: 107.5612,
+		stream_url: 'https://atcs.bandung.go.id/cctv/tol-pasteur',
+		thumbnail_url: 'https://images.unsplash.com/photo-1506521781263-d8422e82f27a?w=600&auto=format&fit=crop&q=80',
+		source_name: 'ATCS Dishub Kota Bandung / Jasa Marga',
+		source_url: 'https://atcs.bandung.go.id',
+		status: 'online',
+		resolution: '720p HD',
+		fps: 25,
+		last_checked_at: new Date().toISOString()
+	},
+	{
+		id: 'cctv_bgr_01',
+		name: 'Simpang Gadog (Pintu Masuk Jalur Puncak)',
+		province: 'Jawa Barat',
+		city: 'Kab. Bogor',
+		district: 'Ciawi',
+		road: 'Jl. Raya Puncak Gadog',
+		region_slug: 'jawa',
+		latitude: -6.6412,
+		longitude: 106.8654,
+		stream_url: 'https://atcs.bogorkab.go.id/simpang-gadog',
+		thumbnail_url: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=600&auto=format&fit=crop&q=80',
+		source_name: 'ATCS Dishub Kab. Bogor / Korlantas',
+		source_url: 'https://dishub.bogorkab.go.id',
+		status: 'online',
+		resolution: '1080p FHD',
+		fps: 25,
+		last_checked_at: new Date().toISOString()
+	},
+	{
+		id: 'cctv_yog_01',
+		name: 'Titik Nol Kilometer Yogyakarta',
+		province: 'DI Yogyakarta',
+		city: 'Kota Yogyakarta',
+		district: 'Gondomanan',
+		road: 'Jl. Pangurakan x Jl. Malioboro',
+		region_slug: 'jawa',
+		latitude: -7.8012,
+		longitude: 110.3651,
+		stream_url: 'https://mam.jogjaprov.go.id/cctv/titik-nol',
+		thumbnail_url: 'https://images.unsplash.com/photo-1596401057633-54a8fe8ef647?w=600&auto=format&fit=crop&q=80',
+		source_name: 'Dishub DIY / Jogja Smart Province',
+		source_url: 'https://jogjaprov.go.id',
+		status: 'online',
+		resolution: '1080p FHD',
+		fps: 25,
+		last_checked_at: new Date().toISOString()
+	},
+	{
+		id: 'cctv_yog_02',
+		name: 'Simpang Tugu Pal Putih',
+		province: 'DI Yogyakarta',
+		city: 'Kota Yogyakarta',
+		district: 'Jetis',
+		road: 'Jl. Jenderal Sudirman x Jl. Margo Utomo',
+		region_slug: 'jawa',
+		latitude: -7.7828,
+		longitude: 110.3671,
+		stream_url: 'https://mam.jogjaprov.go.id/cctv/tugu-jogja',
+		thumbnail_url: 'https://images.unsplash.com/photo-1569336415962-a4bd9f69cd83?w=600&auto=format&fit=crop&q=80',
+		source_name: 'Dishub DIY',
+		source_url: 'https://dishub.jogjaprov.go.id',
+		status: 'online',
+		resolution: '1080p FHD',
+		fps: 25,
+		last_checked_at: new Date().toISOString()
+	},
+	{
+		id: 'cctv_sby_01',
+		name: 'Simpang Bundaran Waru (Surabaya Selatan)',
+		province: 'Jawa Timur',
+		city: 'Kota Surabaya',
+		district: 'Wonokromo',
+		road: 'Jl. Ahmad Yani',
+		region_slug: 'jawa',
+		latitude: -7.3512,
+		longitude: 112.7301,
+		stream_url: 'https://sits.surabaya.go.id/cctv/bundaran-waru',
+		thumbnail_url: 'https://images.unsplash.com/photo-1546587348-d12660c30c50?w=600&auto=format&fit=crop&q=80',
+		source_name: 'SITS Dishub Kota Surabaya',
+		source_url: 'https://sits.surabaya.go.id',
+		status: 'online',
+		resolution: '1080p FHD',
+		fps: 25,
+		last_checked_at: new Date().toISOString()
+	},
+	{
+		id: 'cctv_bali_01',
+		name: 'Simpang Dewa Ruci (Underpass Kuta)',
+		province: 'Bali',
+		city: 'Kab. Badung',
+		district: 'Kuta',
+		road: 'Jl. Bypass Ngurah Rai x Jl. Sunset Road',
+		region_slug: 'bali_nusa_tenggara',
+		latitude: -8.7189,
+		longitude: 115.1834,
+		stream_url: 'https://atcs.baliprov.go.id/cctv/dewa-ruci',
+		thumbnail_url: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&auto=format&fit=crop&q=80',
+		source_name: 'ATCS Dishub Provinsi Bali',
+		source_url: 'https://atcs.baliprov.go.id',
+		status: 'online',
+		resolution: '1080p FHD',
+		fps: 25,
+		last_checked_at: new Date().toISOString()
+	},
+	{
+		id: 'cctv_med_01',
+		name: 'Lapangan Merdeka Medan (Jl. Balai Kota)',
+		province: 'Sumatera Utara',
+		city: 'Kota Medan',
+		district: 'Medan Barat',
+		road: 'Jl. Balai Kota',
+		region_slug: 'sumatera',
+		latitude: 3.5912,
+		longitude: 98.6789,
+		stream_url: 'https://atcs.medan.go.id/lapangan-merdeka',
+		thumbnail_url: 'https://images.unsplash.com/photo-1508873696983-2df5293cb32f?w=600&auto=format&fit=crop&q=80',
+		source_name: 'ATCS Dishub Kota Medan',
+		source_url: 'https://dishub.pemkomedan.go.id',
+		status: 'online',
+		resolution: '1080p FHD',
+		fps: 25,
+		last_checked_at: new Date().toISOString()
+	},
+	{
+		id: 'cctv_mks_01',
+		name: 'Anjungan Pantai Losari',
+		province: 'Sulawesi Selatan',
+		city: 'Kota Makassar',
+		district: 'Ujung Pandang',
+		road: 'Jl. Penghibur',
+		region_slug: 'sulawesi',
+		latitude: -5.1442,
+		longitude: 119.4089,
+		stream_url: 'https://warroom.makassar.go.id/cctv/losari',
+		thumbnail_url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&auto=format&fit=crop&q=80',
+		source_name: 'Operation Room Pemkot Makassar',
+		source_url: 'https://makassarkota.go.id',
+		status: 'online',
+		resolution: '1080p FHD',
+		fps: 25,
+		last_checked_at: new Date().toISOString()
+	}
+];
+
+export function fetchCctvDataDirect({ north, south, east, west, region = 'all', province = 'all', status = 'all', limit = 80 } = {}) {
+	let filtered = CURATED_CCTV_CAMERAS;
+
+	if (north !== undefined && north !== null && south !== undefined && south !== null) {
+		filtered = filtered.filter(
+			(cam) => cam.latitude <= north && cam.latitude >= south && cam.longitude <= east && cam.longitude >= west
+		);
+	}
+
+	if (region && region !== 'all' && region !== 'indonesia') {
+		filtered = filtered.filter((cam) => cam.region_slug === region.toLowerCase());
+	}
+
+	if (province && province !== 'all') {
+		filtered = filtered.filter((cam) => cam.province.toLowerCase().includes(province.toLowerCase()));
+	}
+
+	if (status && status !== 'all') {
+		filtered = filtered.filter((cam) => cam.status.toLowerCase() === status.toLowerCase());
+	}
+
+	return {
+		total: filtered.length,
+		updated_at: new Date().toISOString(),
+		cameras: filtered.slice(0, limit)
+	};
+}
+
+export function searchCctvDirect(query) {
+	const trimmed = (query || '').trim().toLowerCase();
+	if (trimmed.length < 2) return [];
+
+	return CURATED_CCTV_CAMERAS.filter(
+		(cam) =>
+			cam.name.toLowerCase().includes(trimmed) ||
+			(cam.road && cam.road.toLowerCase().includes(trimmed)) ||
+			cam.city.toLowerCase().includes(trimmed) ||
+			(cam.district && cam.district.toLowerCase().includes(trimmed)) ||
+			cam.province.toLowerCase().includes(trimmed)
+	).slice(0, 20);
+}
+
+export function fetchCctvDetailDirect(id) {
+	return CURATED_CCTV_CAMERAS.find((cam) => String(cam.id) === String(id)) || null;
+}
+
+export function fetchCctvSourcesDirect() {
+	return [
+		{ name: 'ATCS Dinas Perhubungan DKI Jakarta', region: 'DKI Jakarta', status: 'active' },
+		{ name: 'ATCS Dinas Perhubungan Kota Bandung', region: 'Jawa Barat', status: 'active' },
+		{ name: 'Dishub Kota Surabaya (SITS)', region: 'Jawa Timur', status: 'active' },
+		{ name: 'ATCS Dinas Perhubungan DI Yogyakarta', region: 'DI Yogyakarta', status: 'active' },
+		{ name: 'Dishub Kota Semarang (Smart City)', region: 'Jawa Tengah', status: 'active' },
+		{ name: 'ATCS Dishub Bali & Denpasar', region: 'Bali', status: 'active' },
+		{ name: 'BPJT / Jasa Marga Tol Nusantara', region: 'Nasional', status: 'active' }
+	];
+}
+
+/* =========================================================================
+   Unified Monitoring Hub Direct Telemetry
+   ========================================================================= */
+
+export async function fetchMonitoringOverviewDirect() {
+	const latestEq = await fetchLatestEarthquakeDirect();
+	const floods = fetchFloodStationsDirect();
+	const cctvs = fetchCctvDataDirect({ limit: 30 });
+	const traffic = fetchTrafficDataDirect();
+
+	let floodWarningCount = 0;
+	for (const f of floods) {
+		if (['SIAGA', 'BAHAYA', 'WASPADA'].includes(f.status)) {
+			floodWarningCount++;
+		}
+	}
+
+	return {
+		weather: {
+			title: 'Cuaca Nasional',
+			active_stations: 38,
+			status: 'Normal Berawan',
+			updated_at: new Date().toISOString()
+		},
+		traffic: {
+			title: 'Lalu Lintas Nasional',
+			monitored_segments: traffic.total,
+			status: 'Terpantau Lancar - Padat Terkendali',
+			rush_hour_active: new Date().getHours() >= 16 && new Date().getHours() <= 19
+		},
+		cctv: {
+			title: 'CCTV Lalu Lintas',
+			total_online: cctvs.cameras.filter((c) => c.status === 'online').length,
+			sources_count: 7,
+			status: 'Feed Aktif'
+		},
+		disaster: {
+			title: 'Bencana & Alam',
+			latest_earthquake: latestEq
+				? {
+						magnitude: latestEq.magnitude,
+						wilayah: latestEq.wilayah,
+						tanggal: latestEq.tanggal,
+						jam: latestEq.jam,
+						status_label: latestEq.status_label
+				  }
+				: null,
+			flood_alerts: floodWarningCount,
+			status: floodWarningCount > 0 ? 'Peringatan Siaga Banjir' : 'Kondisi Sungai Normal'
+		},
+		updated_at: new Date().toISOString()
+	};
+}

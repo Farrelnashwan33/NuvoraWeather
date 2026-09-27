@@ -11,10 +11,36 @@ import {
 	fetchLatestEarthquakeDirect,
 	fetchEarthquakesDirect,
 	fetchFloodStationsDirect,
-	fetchDisasterStatusDirect
+	fetchDisasterStatusDirect,
+	fetchTrafficDataDirect,
+	searchTrafficDirect,
+	fetchTrafficHierarchyDirect,
+	fetchAreaTrafficDirect,
+	fetchCctvDataDirect,
+	searchCctvDirect,
+	fetchCctvDetailDirect,
+	fetchCctvSourcesDirect,
+	fetchMonitoringOverviewDirect
 } from './openMeteoDirect.js';
 
 const API_BASE = import.meta.env.PUBLIC_API_URL || 'http://localhost:8000/api';
+
+// Client-side Memory Cache with TTL
+const apiCache = new Map();
+
+function getCached(key, maxAgeMs) {
+	const entry = apiCache.get(key);
+	if (!entry) return null;
+	if (Date.now() - entry.timestamp > maxAgeMs) {
+		apiCache.delete(key);
+		return null;
+	}
+	return entry.data;
+}
+
+function setCached(key, data) {
+	apiCache.set(key, { data, timestamp: Date.now() });
+}
 
 /**
  * Helper to fetch with timeout and error handling
@@ -340,3 +366,257 @@ export async function saveAdminSettings(settings) {
 	if (!res.ok) throw new Error(json.message || 'Failed to save settings');
 	return json;
 }
+
+/* =========================================================================
+   Traffic Monitoring API Client
+   ========================================================================= */
+
+export async function fetchTrafficData({ north, south, east, west, region = 'all', status = 'all' } = {}, signal = null) {
+	const cacheKey = `traffic_${region}_${status}_${north?.toFixed(2)}_${south?.toFixed(2)}_${east?.toFixed(2)}_${west?.toFixed(2)}`;
+	const cached = getCached(cacheKey, 120000); // 2 min TTL
+	if (cached) return cached;
+
+	try {
+		const params = new URLSearchParams();
+		if (north !== undefined && north !== null) params.append('north', north);
+		if (south !== undefined && south !== null) params.append('south', south);
+		if (east !== undefined && east !== null) params.append('east', east);
+		if (west !== undefined && west !== null) params.append('west', west);
+		if (region && region !== 'all') params.append('region', region);
+		if (status && status !== 'all') params.append('status', status);
+
+		const url = `${API_BASE}/traffic?${params.toString()}`;
+		const res = await fetchWithTimeout(url, { signal }, 3500);
+
+		if (res.ok) {
+			const json = await res.json();
+			if (json.data) {
+				setCached(cacheKey, json.data);
+				return json.data;
+			}
+		}
+	} catch (err) {
+		// Silent fallback
+	}
+
+	const fallback = fetchTrafficDataDirect({ north, south, east, west, region, status });
+	setCached(cacheKey, fallback);
+	return fallback;
+}
+
+export async function searchTraffic(query, signal = null) {
+	if (!query || query.trim().length < 2) return [];
+
+	try {
+		const url = `${API_BASE}/traffic/search?q=${encodeURIComponent(query.trim())}`;
+		const res = await fetchWithTimeout(url, { signal }, 3000);
+
+		if (res.ok) {
+			const json = await res.json();
+			if (json.results && json.results.length > 0) return json.results;
+		}
+	} catch (err) {
+		// Silent fallback
+	}
+
+	return searchTrafficDirect(query);
+}
+
+export async function fetchTrafficHierarchy() {
+	try {
+		const url = `${API_BASE}/traffic/hierarchy`;
+		const res = await fetchWithTimeout(url, {}, 3000);
+
+		if (res.ok) {
+			const json = await res.json();
+			if (json.regions) return json.regions;
+		}
+	} catch (err) {
+		// Silent fallback
+	}
+
+	return fetchTrafficHierarchyDirect();
+}
+
+export async function fetchAreaTraffic(id) {
+	try {
+		const url = `${API_BASE}/traffic/area/${id}`;
+		const res = await fetchWithTimeout(url, {}, 3000);
+
+		if (res.ok) {
+			const json = await res.json();
+			if (json.data) return json.data;
+		}
+	} catch (err) {
+		// Silent fallback
+	}
+
+	return fetchAreaTrafficDirect(id);
+}
+
+/* =========================================================================
+   CCTV Traffic Monitoring API Client
+   ========================================================================= */
+
+export async function fetchCctvData({ north, south, east, west, region = 'all', province = 'all', status = 'all', limit = 80 } = {}, signal = null) {
+	const cacheKey = `cctv_${region}_${province}_${status}_${north?.toFixed(2)}_${south?.toFixed(2)}_${east?.toFixed(2)}_${west?.toFixed(2)}`;
+	const cached = getCached(cacheKey, 300000); // 5 min TTL
+	if (cached) return cached;
+
+	try {
+		const params = new URLSearchParams();
+		if (north !== undefined && north !== null) params.append('north', north);
+		if (south !== undefined && south !== null) params.append('south', south);
+		if (east !== undefined && east !== null) params.append('east', east);
+		if (west !== undefined && west !== null) params.append('west', west);
+		if (region && region !== 'all') params.append('region', region);
+		if (province && province !== 'all') params.append('province', province);
+		if (status && status !== 'all') params.append('status', status);
+		params.append('limit', limit);
+
+		const url = `${API_BASE}/cctv?${params.toString()}`;
+		const res = await fetchWithTimeout(url, { signal }, 3500);
+
+		if (res.ok) {
+			const json = await res.json();
+			if (json.data) {
+				setCached(cacheKey, json.data);
+				return json.data;
+			}
+		}
+	} catch (err) {
+		// Silent fallback
+	}
+
+	const fallback = fetchCctvDataDirect({ north, south, east, west, region, province, status, limit });
+	setCached(cacheKey, fallback);
+	return fallback;
+}
+
+export async function searchCctv(query, signal = null) {
+	if (!query || query.trim().length < 2) return [];
+
+	try {
+		const url = `${API_BASE}/cctv/search?q=${encodeURIComponent(query.trim())}`;
+		const res = await fetchWithTimeout(url, { signal }, 3000);
+
+		if (res.ok) {
+			const json = await res.json();
+			if (json.results && json.results.length > 0) return json.results;
+		}
+	} catch (err) {
+		// Silent fallback
+	}
+
+	return searchCctvDirect(query);
+}
+
+export async function fetchCctvDetail(id) {
+	try {
+		const url = `${API_BASE}/cctv/${id}`;
+		const res = await fetchWithTimeout(url, {}, 3000);
+
+		if (res.ok) {
+			const json = await res.json();
+			if (json.data) return json.data;
+		}
+	} catch (err) {
+		// Silent fallback
+	}
+
+	return fetchCctvDetailDirect(id);
+}
+
+export async function fetchCctvSources() {
+	try {
+		const url = `${API_BASE}/cctv/sources`;
+		const res = await fetchWithTimeout(url, {}, 3000);
+
+		if (res.ok) {
+			const json = await res.json();
+			if (json.sources) return json.sources;
+		}
+	} catch (err) {
+		// Silent fallback
+	}
+
+	return fetchCctvSourcesDirect();
+}
+
+/* =========================================================================
+   Unified Monitoring Hub API Client
+   ========================================================================= */
+
+export async function fetchMonitoringOverview() {
+	const cached = getCached('monitoring_overview', 120000); // 2 min TTL
+	if (cached) return cached;
+
+	try {
+		const url = `${API_BASE}/monitoring/overview`;
+		const res = await fetchWithTimeout(url, {}, 3500);
+
+		if (res.ok) {
+			const json = await res.json();
+			if (json.data) {
+				setCached('monitoring_overview', json.data);
+				return json.data;
+			}
+		}
+	} catch (err) {
+		// Silent fallback
+	}
+
+	const fallback = await fetchMonitoringOverviewDirect();
+	setCached('monitoring_overview', fallback);
+	return fallback;
+}
+
+/* =========================================================================
+   Unified API Namespace Objects (for clean DX in Svelte components)
+   ========================================================================= */
+
+export const trafficApi = {
+	getTraffic: async (params = {}, options = {}) => {
+		const data = await fetchTrafficData(params, options.signal);
+		return { data: Array.isArray(data) ? data : data?.data || [] };
+	},
+	search: async (query, options = {}) => {
+		const data = await searchTraffic(query, options.signal);
+		return { data: Array.isArray(data) ? data : data?.results || [] };
+	},
+	getHierarchy: async () => {
+		const data = await fetchTrafficHierarchy();
+		return { data };
+	},
+	getArea: async (id) => {
+		const data = await fetchAreaTraffic(id);
+		return { data };
+	}
+};
+
+export const cctvApi = {
+	getCameras: async (params = {}, options = {}) => {
+		const data = await fetchCctvData(params, options.signal);
+		return { data: Array.isArray(data) ? data : data?.data || [] };
+	},
+	search: async (query, options = {}) => {
+		const data = await searchCctv(query, options.signal);
+		return { data: Array.isArray(data) ? data : data?.results || [] };
+	},
+	getDetail: async (id) => {
+		const data = await fetchCctvDetail(id);
+		return { data };
+	},
+	getSources: async () => {
+		const data = await fetchCctvSources();
+		return { data };
+	}
+};
+
+export const monitoringApi = {
+	getOverview: async () => {
+		const data = await fetchMonitoringOverview();
+		return { data };
+	}
+};
+

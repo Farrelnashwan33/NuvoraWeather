@@ -1,11 +1,14 @@
 <script>
 	import { weatherStore } from '$lib/stores/weatherState.svelte.js';
 	import { i18n } from '$lib/stores/i18n.svelte.js';
-	import { Search, Compass, Sun, Moon, Sparkles, Shield, CloudSun, Globe } from 'lucide-svelte';
+	import { page } from '$app/stores';
+	import { Search, Compass, Sun, Moon, Sparkles, Shield, CloudSun, Globe, Activity, ChevronDown, Car, Video, Flame } from 'lucide-svelte';
 	import LanguageSelectorModal from '$lib/components/LanguageSelectorModal.svelte';
 
 	let { onSearchClick } = $props();
 	let languageModalOpen = $state(false);
+
+	let currentPath = $derived($page?.url?.pathname || '/');
 </script>
 
 <header class="w-full z-40 relative px-4 sm:px-6 lg:px-8 py-4">
@@ -33,38 +36,90 @@
 		</div>
 
 		<!-- Desktop Navigation Tabs -->
-		<nav class="hidden md:flex items-center gap-1 p-1 bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl">
-			<button
-				onclick={() => { if (window.location.pathname !== '/') window.location.href = '/'; else weatherStore.activeTab = 'overview'; }}
-				class="px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all duration-200 {weatherStore.activeTab === 'overview' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md shadow-cyan-500/25' : 'text-slate-400 hover:text-white hover:bg-white/5'}"
-			>
-				{i18n.t('nav_overview', 'Overview')}
-			</button>
-			<button
-				onclick={() => { if (window.location.pathname !== '/') window.location.href = '/'; else weatherStore.activeTab = 'forecast'; }}
-				class="px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all duration-200 {weatherStore.activeTab === 'forecast' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md shadow-cyan-500/25' : 'text-slate-400 hover:text-white hover:bg-white/5'}"
-			>
-				{i18n.t('nav_forecast', 'Forecast')}
-			</button>
-			<button
-				onclick={() => { if (window.location.pathname !== '/') window.location.href = '/'; else weatherStore.activeTab = 'map'; }}
-				class="px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all duration-200 {weatherStore.activeTab === 'map' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md shadow-cyan-500/25' : 'text-slate-400 hover:text-white hover:bg-white/5'}"
-			>
-				{i18n.t('nav_radar', 'Radar')}
-			</button>
+		<nav class="hidden md:flex items-center gap-1 p-1 bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl relative">
 			<a
-				href="/disaster"
-				class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-1.5 bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30"
+				href="/"
+				class="px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all duration-200 {currentPath === '/' && weatherStore.activeTab === 'overview' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md shadow-cyan-500/25' : 'text-slate-400 hover:text-white hover:bg-white/5'}"
+				onclick={() => { weatherStore.activeTab = 'overview'; }}
 			>
-				<span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-				<span>{i18n.t('nav_disaster', 'Disaster')}</span>
+				{i18n.t('nav_overview', 'Beranda')}
 			</a>
-			<button
-				onclick={() => { if (window.location.pathname !== '/') window.location.href = '/'; else weatherStore.activeTab = 'cities'; }}
-				class="px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all duration-200 {weatherStore.activeTab === 'cities' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md shadow-cyan-500/25' : 'text-slate-400 hover:text-white hover:bg-white/5'}"
+			<a
+				href="/"
+				class="px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all duration-200 {currentPath === '/' && weatherStore.activeTab === 'forecast' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md shadow-cyan-500/25' : 'text-slate-400 hover:text-white hover:bg-white/5'}"
+				onclick={() => { weatherStore.activeTab = 'forecast'; }}
 			>
-				{i18n.t('nav_cities', 'Cities')}
-			</button>
+				{i18n.t('nav_forecast', 'Prakiraan')}
+			</a>
+			<a
+				href="/"
+				class="px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all duration-200 {currentPath === '/' && weatherStore.activeTab === 'map' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md shadow-cyan-500/25' : 'text-slate-400 hover:text-white hover:bg-white/5'}"
+				onclick={() => { weatherStore.activeTab = 'map'; }}
+			>
+				{i18n.t('nav_radar', 'Radar & Peta')}
+			</a>
+
+			<!-- Monitoring Dropdown Trigger -->
+			<div class="relative group">
+				<button
+					class="px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all duration-200 flex items-center gap-1.5 {['/traffic', '/cctv', '/disaster', '/monitoring'].includes(currentPath) ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md shadow-cyan-500/25' : 'text-slate-400 hover:text-white hover:bg-white/5'}"
+					aria-expanded="false"
+				>
+					<Activity class="w-3.5 h-3.5 text-cyan-400" />
+					<span>Monitoring</span>
+					<ChevronDown class="w-3 h-3 transition-transform duration-200 group-hover:rotate-180" />
+				</button>
+
+				<!-- Dropdown Menu -->
+				<div class="absolute left-0 top-full mt-2 w-56 p-1.5 bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl shadow-black/60 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-1 group-hover:translate-y-0 z-50">
+					<a
+						href="/traffic"
+						class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-cyan-500/15 transition duration-150 {currentPath === '/traffic' ? 'bg-cyan-500/20 text-cyan-300 font-semibold' : ''}"
+					>
+						<Car class="w-4 h-4 text-emerald-400" />
+						<div>
+							<div class="font-medium">Lalu Lintas</div>
+							<div class="text-[10px] text-slate-400">Kondisi jalan & kemacetan</div>
+						</div>
+					</a>
+					<a
+						href="/cctv"
+						class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-cyan-500/15 transition duration-150 {currentPath === '/cctv' ? 'bg-cyan-500/20 text-cyan-300 font-semibold' : ''}"
+					>
+						<Video class="w-4 h-4 text-cyan-400" />
+						<div>
+							<div class="font-medium">CCTV Indonesia</div>
+							<div class="text-[10px] text-slate-400">Live feed ATCS / Dishub</div>
+						</div>
+					</a>
+					<a
+						href="/disaster"
+						class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-cyan-500/15 transition duration-150 {currentPath === '/disaster' ? 'bg-rose-500/20 text-rose-300 font-semibold' : ''}"
+					>
+						<Flame class="w-4 h-4 text-rose-400" />
+						<div>
+							<div class="font-medium">Bencana & Gempa</div>
+							<div class="text-[10px] text-slate-400">BMKG Gempa & Banjir</div>
+						</div>
+					</a>
+					<div class="h-px bg-white/10 my-1"></div>
+					<a
+						href="/monitoring"
+						class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-cyan-300 hover:text-white hover:bg-cyan-500/25 transition duration-150 font-medium"
+					>
+						<Activity class="w-4 h-4 text-cyan-400" />
+						<span>Pusat Monitoring Hub</span>
+					</a>
+				</div>
+			</div>
+
+			<a
+				href="/"
+				class="px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all duration-200 {currentPath === '/' && weatherStore.activeTab === 'cities' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md shadow-cyan-500/25' : 'text-slate-400 hover:text-white hover:bg-white/5'}"
+				onclick={() => { weatherStore.activeTab = 'cities'; }}
+			>
+				{i18n.t('nav_cities', 'Kota')}
+			</a>
 		</nav>
 
 		<!-- Right Controls (Search bar trigger, Unit toggle, Theme toggle, Admin) -->
